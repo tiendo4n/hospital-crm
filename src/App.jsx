@@ -108,7 +108,7 @@ function useLuong(){
     const luongCung=lcThucHuong(lc,pctDat)*T;
     const thuong=Math.max(dtLC-dttKhoan,0)*pctMoc(pctDat,THUONG_TH)/100*T;
     // Thưởng năm (tính trên DTT vượt khoán năm, ước tính x12)
-    const dtNam=dtLC*12; const chiTieuNam=state.caiDat.chiTieu*12*0.8;
+    const dtNam=dtLC*12; const chiTieuNam=st.caiDat.chiTieu*12*0.8;
     const pctDatNam=chiTieuNam>0?dtNam/chiTieuNam*100:0;
     const thuongNam=Math.max(dtNam-chiTieuNam,0)*pctMoc(pctDatNam,THUONG_NAM)/100*T;
     return {lc,dttKhoan,dtLC,pctDat,luongCung,tongHH,thuong,thuongNam,pctDatNam,tong:luongCung+tongHH+thuong,theoLoai};
