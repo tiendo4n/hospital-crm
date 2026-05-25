@@ -4,7 +4,8 @@ import {
   Building2, BarChart3, Settings, Phone, CreditCard, Calendar, Package,
   Plus, Trash2, Check, X, ArrowLeft, Search, Clipboard, Sparkles,
   TrendingUp, Wallet, Gift, ChevronDown, ChevronUp, Info, Receipt,
-  User, Send, Copy, MapPin, Award, ChevronRight, Layers, Pencil
+  User, Send, Copy, MapPin, Award, ChevronRight, Layers, DollarSign,
+  Download, RefreshCw, FileText, Pencil
 } from "lucide-react";
 
 const FONT = `'Be Vietnam Pro','Segoe UI',system-ui,sans-serif`;
@@ -23,6 +24,7 @@ const LOAI_DV = {
   mau:{ten:"Lưu trữ máu cuống rốn"}, shira:{ten:"Shira"},
   asahi:{ten:"Asahi (không HH)"}, baohiem:{ten:"Thẻ bảo hiểm (không HH)"},
 };
+const THUONG_NAM=[{tu:0,pct:0},{tu:100,pct:0.2},{tu:150,pct:0.35},{tu:200,pct:0.45},{tu:250,pct:0.5}];
 const TRANG_THAI = {
   tiemNang:{ten:"Tiềm năng",mau:"#7da2c0"}, dangTuVan:{ten:"Đang tư vấn",mau:"#f0b429"},
   daChot:{ten:"Đã chốt",mau:"#1ec8a5"}, daKham:{ten:"Đã khám",mau:"#4ea8de"},
@@ -105,7 +107,11 @@ function useLuong(){
     const pctDat=dttKhoan>0?dtLC/dttKhoan*100:0;
     const luongCung=lcThucHuong(lc,pctDat)*T;
     const thuong=Math.max(dtLC-dttKhoan,0)*pctMoc(pctDat,THUONG_TH)/100*T;
-    return {lc,dttKhoan,dtLC,pctDat,luongCung,tongHH,thuong,tong:luongCung+tongHH+thuong,theoLoai};
+    // Thưởng năm (tính trên DTT vượt khoán năm, ước tính x12)
+    const dtNam=dtLC*12; const chiTieuNam=state.caiDat.chiTieu*12*0.8;
+    const pctDatNam=chiTieuNam>0?dtNam/chiTieuNam*100:0;
+    const thuongNam=Math.max(dtNam-chiTieuNam,0)*pctMoc(pctDatNam,THUONG_NAM)/100*T;
+    return {lc,dttKhoan,dtLC,pctDat,luongCung,tongHH,thuong,thuongNam,pctDatNam,tong:luongCung+tongHH+thuong,theoLoai};
   },[st]);
 }
 /* ===== UI PRIMITIVES ===== */
@@ -494,25 +500,71 @@ function MapBV(){
 /* ===== BÁO CÁO ===== */
 function BaoCao(){
   const {state:st}=useStore(); const L=useLuong();
+  const [ky,setKy]=useState("thang");
+  const [exportMsg,setExportMsg]=useState("");
+
+  function xuatBaoCao(){
+    const lines=[
+      "BÁO CÁO CBKD - BV ĐA KHOA PHƯƠNG ĐÔNG",
+      "=".repeat(40),
+      `Kỳ: ${ky==="thang"?"Tháng này":"Dự kiến năm"} | Phân cấp: ${PHAN_CAP[st.caiDat.cap].ten} | Chỉ tiêu: ${fmtTr(st.caiDat.chiTieu)}/tháng`,
+      "",
+      "CHỈ TIÊU & DOANH THU",
+      `DTT ghi nhận: ${fmtTr(L.dtLC.toFixed(1))}  |  Khoán: ${fmtTr(L.dttKhoan)}  |  Đạt: ${L.pctDat.toFixed(1)}%`,
+      "",
+      "THU NHẬP DỰ KIẾN",
+      `Lương cứng: ${fmt(L.luongCung)}`,
+      `Hoa hồng:   ${fmt(L.tongHH)}`,
+      `Thưởng tháng: ${fmt(L.thuong)}`,
+      `Thưởng năm (ước): ${fmt(L.thuongNam/12)}`,
+      "-".repeat(40),
+      `TỔNG THÁNG: ${fmt(L.tong)}`,
+      "",
+      "HOA HỒNG THEO DỊCH VỤ",
+      ...Object.entries(L.theoLoai).filter(([,v])=>v>0).map(([k,v])=>`  ${k}: ${fmt(v)}`),
+      "",
+      "KHÁCH HÀNG ĐÃ CHỐT/KHÁM",
+      ...st.khach.filter((k)=>k.trangThai==="daChot"||k.trangThai==="daKham")
+        .map((k)=>`  ${k.ten} | ${LOAI_DV[k.loai]?.ten} | DTT: ${fmtTr(tinhDTT(k).toFixed(1))} | HH: ${fmt(hhKhach(k))}`),
+      "",
+      `Xuất lúc: ${new Date().toLocaleString("vi-VN")}`,
+    ];
+    const blob=new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url;
+    a.download=`BaoCao_CBKD_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    setExportMsg("Đã xuất báo cáo!"); setTimeout(()=>setExportMsg(""),3000);
+  }
+
   return <div>
-    <Header title="Báo cáo tháng" sub="Tổng hợp doanh thu & thu nhập"/>
+    <Header title="Báo cáo" sub="CBKD · BV Phương Đông"/>
+    <div style={{display:"flex",gap:8,marginBottom:14}}>
+      {[["thang","Tháng này"],["nam","Dự kiến năm"]].map(([k,l])=>(
+        <button key={k} onClick={()=>setKy(k)} style={{flex:1,padding:"10px 0",borderRadius:11,border:"none",fontFamily:FONT,fontSize:13.5,fontWeight:700,cursor:"pointer",background:ky===k?"linear-gradient(135deg,#1ec8a5,#15a888)":C.card,color:ky===k?"#06231c":C.sub}}>{l}</button>
+      ))}
+    </div>
     <div style={box}>
-      <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:12}}>Tổng quan</div>
       <Row label="Tổng khách" v={st.khach.length+" khách"}/>
       <Row label="Đã chốt/khám" v={st.khach.filter((k)=>k.trangThai==="daChot"||k.trangThai==="daKham").length+" khách"}/>
       <Row label="DTT ghi nhận" v={fmtTr(L.dtLC.toFixed(1))}/>
-      <Row label="% đạt khoán" v={L.pctDat.toFixed(1)+"%"}/>
+      <Row label="% đạt khoán tháng" v={L.pctDat.toFixed(1)+"%"}/>
+      {ky==="nam"&&<Row label="% đạt khoán năm (ước)" v={L.pctDatNam.toFixed(1)+"%"}/>}
     </div>
     <div style={{...box,background:"linear-gradient(135deg,#0e3450,#0a2236)",border:`1.5px solid ${C.accent}33`}}>
-      <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:12}}>Thu nhập dự kiến</div>
       <Row label="Lương cứng" v={fmt(L.luongCung)}/>
       <Row label="Tổng hoa hồng" v={fmt(L.tongHH)}/>
       <Row label="Thưởng tháng" v={fmt(L.thuong)}/>
+      <Row label="Thưởng năm (ước/tháng)" v={fmt(L.thuongNam/12)}/>
       <div style={{height:1,background:C.line,margin:"10px 0"}}/>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <span style={{fontSize:14,color:C.accent,fontWeight:700}}>TỔNG THU NHẬP</span>
+        <span style={{fontSize:14,color:C.accent,fontWeight:700}}>TỔNG THÁNG</span>
         <span style={{fontSize:24,color:C.accent,fontWeight:900}}>{fmt(L.tong)}</span>
       </div>
+      {ky==="nam"&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8}}>
+        <span style={{fontSize:13,color:"#ffd479",fontWeight:700}}>TỔNG NĂM (ước)</span>
+        <span style={{fontSize:18,color:"#ffd479",fontWeight:900}}>{fmt((L.tong+L.thuongNam/12)*12)}</span>
+      </div>}
     </div>
     <div style={box}>
       <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:12}}>Hoa hồng theo dịch vụ</div>
@@ -526,7 +578,6 @@ function BaoCao(){
       })}
     </div>
     <div style={box}>
-      <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:12}}>Phân tích trạng thái</div>
       {Object.entries(TRANG_THAI).map(([k,v])=>{
         const n=st.khach.filter((x)=>x.trangThai===k).length;
         return <div key={k} style={{display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:8,color:C.sub}}>
@@ -535,6 +586,10 @@ function BaoCao(){
         </div>;
       })}
     </div>
+    <button onClick={xuatBaoCao} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"14px 0",borderRadius:13,border:"none",background:"linear-gradient(135deg,#1ec8a5,#15a888)",color:"#06231c",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:FONT,boxShadow:"0 8px 22px #1ec8a533"}}>
+      <Download size={18}/> Xuất báo cáo (.txt)
+    </button>
+    {exportMsg&&<div style={{textAlign:"center",color:C.accent,fontSize:13,marginTop:8}}>{exportMsg}</div>}
   </div>;
 }
 
@@ -597,11 +652,196 @@ const TABS=[
   {id:"bao_cao",icon:BarChart3,label:"Báo cáo"},
   {id:"cai_dat",icon:Settings,label:"Cài đặt"},
 ];
+
+/* ===== BACKUP DATA ===== */
+function BackupData(){
+  const {state:st}=useStore();
+  const [msg,setMsg]=useState("");
+  const fileRef=React.useRef();
+
+  function exportData(){
+    const blob=new Blob([JSON.stringify(st,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url;
+    a.download=`HospitalCRM_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    setMsg("✅ Đã xuất file backup!"); setTimeout(()=>setMsg(""),3000);
+  }
+
+  function importData(e){
+    const file=e.target.files[0]; if(!file)return;
+    const r=new FileReader();
+    r.onload=(ev)=>{
+      try{
+        const d=JSON.parse(ev.target.result);
+        if(d.khach&&d.caiDat){
+          localStorage.setItem("hosp_crm_v2",JSON.stringify(d));
+          setMsg("✅ Đã nhập backup! Tải lại app để thấy dữ liệu."); 
+          setTimeout(()=>window.location.reload(),2000);
+        } else { setMsg("❌ File không đúng định dạng"); }
+      }catch(ex){ setMsg("❌ File lỗi: "+ex.message); }
+    };
+    r.readAsText(file);
+  }
+
+  return <div>
+    <Header title="Backup & Restore" sub="Sao lưu dữ liệu khách hàng"/>
+    <div style={box}>
+      <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:8}}>Thông tin hiện tại</div>
+      <Row label="Số khách" v={st.khach.length+" khách"}/>
+      <Row label="Lịch sử liên hệ" v={st.lienHe.length+" bản ghi"}/>
+    </div>
+    <div style={{...box,border:`1.5px solid ${C.accent}33`}}>
+      <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:6}}>Xuất backup</div>
+      <div style={{fontSize:12.5,color:C.dim,marginBottom:12,lineHeight:1.5}}>Tải toàn bộ dữ liệu về máy dạng file JSON. Lưu ở nơi an toàn để dùng khi đổi điện thoại.</div>
+      <button onClick={exportData} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#1ec8a5,#15a888)",color:"#06231c",fontWeight:800,fontSize:14.5,cursor:"pointer",fontFamily:FONT}}>
+        <Download size={17}/> Xuất file backup
+      </button>
+    </div>
+    <div style={box}>
+      <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:6}}>Nhập backup</div>
+      <div style={{fontSize:12.5,color:C.dim,marginBottom:12,lineHeight:1.5}}>⚠️ Sẽ ghi đè toàn bộ dữ liệu hiện tại. Chỉ dùng khi chuyển máy hoặc khôi phục sau sự cố.</div>
+      <input type="file" accept=".json" ref={fileRef} onChange={importData} style={{display:"none"}}/>
+      <button onClick={()=>fileRef.current?.click()} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px 0",borderRadius:12,border:`1.5px solid ${C.line}`,background:C.card,color:C.sub,fontWeight:700,fontSize:14.5,cursor:"pointer",fontFamily:FONT}}>
+        <RefreshCw size={17}/> Nhập từ file backup
+      </button>
+    </div>
+    {msg&&<div style={{textAlign:"center",color:msg.startsWith("✅")?C.accent:"#e26d6d",fontSize:13.5,fontWeight:600,padding:"10px 0"}}>{msg}</div>}
+  </div>;
+}
+
+/* ===== GIÁ DỊCH VỤ ===== */
+const NHOM_ICON={"Khám bệnh":"🏥","Xét nghiệm":"🧪","Siêu âm":"🔊","X-quang":"📷","CT/MRI":"🧲","Nội soi":"🔬","Phẫu thuật":"🔪","Giường bệnh":"🛏️","Thai sản":"🤱","Vaccine":"💉","Thủ thuật":"🩺","Chỉnh hình":"🦴"};
+const fmtGia=(v)=>Number(v).toLocaleString("vi-VN")+"đ";
+
+function GiaDichVu(){
+  const [giaData,setGiaData]=useState(null);
+  const [loading,setLoading]=useState(true);
+  const [q,setQ]=useState("");
+  const [nhomSel,setNhomSel]=useState("Tất cả");
+  const [copied,setCopied]=useState("");
+  const inputRef=React.useRef();
+
+  useEffect(()=>{
+    fetch("/gia_dv.json?t="+Date.now())
+      .then((r)=>r.json())
+      .then((d)=>{setGiaData(d);setLoading(false);})
+      .catch(()=>setLoading(false));
+  },[]);
+
+  const nhomList=useMemo(()=>giaData?["Tất cả",...Object.keys(giaData).sort()]:[]  ,[giaData]);
+
+  const allItems=useMemo(()=>{
+    if(!giaData)return[];
+    const arr=[];
+    Object.entries(giaData).forEach(([nhom,items])=>items.forEach((item)=>arr.push({...item,nhom})));
+    return arr;
+  },[giaData]);
+
+  // Kết quả tìm kiếm + dropdown
+  const suggestions=useMemo(()=>{
+    if(!q.trim()||q.length<2)return[];
+    const kw=q.toLowerCase();
+    return allItems.filter((i)=>i.ten.toLowerCase().includes(kw)||(i.ma&&i.ma.toLowerCase().includes(kw))).slice(0,30);
+  },[allItems,q]);
+
+  // Duyệt theo nhóm (khi không tìm kiếm)
+  const byNhom=useMemo(()=>{
+    if(!giaData)return{};
+    if(nhomSel==="Tất cả")return giaData;
+    return{[nhomSel]:giaData[nhomSel]||[]};
+  },[giaData,nhomSel]);
+
+  function copyItem(item){
+    const text=`${item.ten}: ${fmtGia(item.gia)}`;
+    navigator.clipboard?.writeText(text);
+    setCopied(item.ma+item.ten); setTimeout(()=>setCopied(""),2000);
+  }
+
+  function selectSuggestion(item){
+    setNhomSel(item.nhom); setQ(""); inputRef.current?.blur();
+  }
+
+  const showDropdown=q.length>=2&&suggestions.length>0;
+
+  return <div>
+    <Header title="Giá dịch vụ" sub="BV Phương Đông · T03/2026"/>
+
+    {/* Search với dropdown */}
+    <div style={{position:"relative",marginBottom:12}}>
+      <Search size={15} style={{position:"absolute",left:13,top:14,color:C.dim,zIndex:1}}/>
+      <input ref={inputRef} style={{...inp,paddingLeft:40,paddingRight:36}} placeholder="Tìm nhanh tên dịch vụ..." value={q} onChange={(e)=>setQ(e.target.value)}/>
+      {q&&<button onClick={()=>setQ("")} style={{position:"absolute",right:12,top:12,background:"none",border:"none",cursor:"pointer",color:C.dim}}><X size={16}/></button>}
+      {showDropdown&&(
+        <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#0a1e32",border:`1.5px solid ${C.line}`,borderRadius:12,zIndex:200,maxHeight:280,overflowY:"auto",marginTop:4,boxShadow:"0 8px 24px #00000066"}}>
+          {suggestions.map((item,i)=>(
+            <div key={i} onClick={()=>selectSuggestion(item)}
+              style={{padding:"11px 14px",cursor:"pointer",borderBottom:i<suggestions.length-1?`1px solid ${C.line}`:"none",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+              <div>
+                <div style={{fontSize:13.5,color:C.text,fontWeight:500,lineHeight:1.3}}>{item.ten}</div>
+                <div style={{fontSize:11.5,color:C.dim,marginTop:2}}>{NHOM_ICON[item.nhom]||"📋"} {item.nhom}</div>
+              </div>
+              <div style={{fontSize:14,color:"#ffd479",fontWeight:800,whiteSpace:"nowrap",flexShrink:0}}>{fmtGia(item.gia)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+
+    {/* Nhóm dịch vụ - dạng chip ngang */}
+    <div style={{display:"flex",gap:7,overflowX:"auto",paddingBottom:6,marginBottom:14,scrollbarWidth:"none"}}>
+      {nhomList.map((n)=>(
+        <button key={n} onClick={()=>{setNhomSel(n);setQ("");}}
+          style={{display:"flex",alignItems:"center",gap:5,fontSize:12.5,fontWeight:600,color:nhomSel===n?C.accent:C.dim,background:nhomSel===n?C.accent+"22":C.card,border:`1px solid ${nhomSel===n?C.accent:C.line}`,borderRadius:20,padding:"7px 13px",cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap",flexShrink:0}}>
+          {n!=="Tất cả"&&<span>{NHOM_ICON[n]||"📋"}</span>}{n}
+        </button>
+      ))}
+    </div>
+
+    {loading&&<div style={{textAlign:"center",color:C.dim,padding:"30px 0",fontSize:13}}>Đang tải danh mục giá...</div>}
+
+    {/* Hiển thị theo nhóm */}
+    {!loading&&!q&&Object.entries(byNhom).map(([nhom,items])=>(
+      <div key={nhom} style={{marginBottom:20}}>
+        <div style={{fontSize:14,fontWeight:800,color:C.text,marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+          <span>{NHOM_ICON[nhom]||"📋"}</span>{nhom}
+          <span style={{fontSize:12,color:C.dim,fontWeight:400}}>({items.length} dịch vụ)</span>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:7}}>
+          {items.slice(0,nhomSel!=="Tất cả"?items.length:8).map((item,i)=>{
+            const key=item.ma+item.ten; const isCopied=copied===key;
+            return <div key={i} style={{background:C.card,border:`1.5px solid ${C.line}`,borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13.5,color:C.text,fontWeight:600,lineHeight:1.35,marginBottom:3}}>{item.ten}</div>
+                {item.ma&&item.ma!=="nan"&&<span style={{fontSize:11,color:C.dim,background:"#081a2d",padding:"1px 7px",borderRadius:7}}>{item.ma}</span>}
+              </div>
+              <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5,flexShrink:0}}>
+                <div style={{fontSize:15,fontWeight:800,color:"#ffd479",whiteSpace:"nowrap"}}>{fmtGia(item.gia)}</div>
+                <button onClick={()=>copyItem(item)} style={{display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:600,color:isCopied?C.accent:C.dim,background:isCopied?C.accent+"22":"#081a2d",border:`1px solid ${isCopied?C.accent:C.line}`,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontFamily:FONT}}>
+                  {isCopied?<><Check size={11}/>Đã copy</>:<><Copy size={11}/>Copy</>}
+                </button>
+              </div>
+            </div>;
+          })}
+          {nhomSel==="Tất cả"&&items.length>8&&(
+            <button onClick={()=>setNhomSel(nhom)} style={{width:"100%",padding:"10px 0",borderRadius:11,border:`1.5px dashed ${C.line}`,background:"transparent",color:C.sub,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:FONT}}>
+              Xem tất cả {items.length} dịch vụ {nhom} →
+            </button>
+          )}
+        </div>
+      </div>
+    ))}
+    <div style={{textAlign:"center",fontSize:11.5,color:C.dim,padding:"10px 0 4px",lineHeight:1.6}}>Giá viện phí T03/2026 · Liên hệ CBKD để biết giá BHYT</div>
+  </div>;
+}
+
 const MORE_TABS=[
   {id:"mau_tin",icon:MessageSquare,label:"Mẫu tin"},
   {id:"uu_dai",icon:Tag,label:"Ưu đãi"},
   {id:"followup",icon:CalendarClock,label:"Follow-up"},
   {id:"map",icon:MapPin,label:"Map"},
+  {id:"gia_dv",icon:DollarSign,label:"Giá DV"},
+  {id:"backup",icon:Download,label:"Backup"},
 ];
 
 /* ===== APP GỐC ===== */
@@ -712,6 +952,8 @@ function InnerApp(){
     if(page==="map") return <MapBV/>;
     if(page==="bao_cao") return <BaoCao/>;
     if(page==="cai_dat") return <CaiDat/>;
+    if(page==="gia_dv") return <GiaDichVu/>;
+    if(page==="backup") return <BackupData/>;
     return null;
   }
 
