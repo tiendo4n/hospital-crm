@@ -1040,12 +1040,12 @@ function InnerApp({userName=""}){
   }
 
   return (
-    <div style={{minHeight:"100vh",background:C.bg,fontFamily:FONT,paddingBottom:72}}>
+    <div style={{minHeight:"100vh",minHeight:"-webkit-fill-available",background:C.bg,fontFamily:FONT,paddingBottom:"calc(72px + env(safe-area-inset-bottom, 0px))"}}>
       <div style={{maxWidth:480,margin:"0 auto",padding:"0 16px"}}>
         {renderPage()}
       </div>
       {/* Bottom nav */}
-      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#0a1e32",borderTop:`1px solid ${C.line}`,display:"flex",maxWidth:480,margin:"0 auto",zIndex:100}}>
+      <div style={{position:"fixed",bottom:0,left:0,right:0,background:"#0a1e32",borderTop:`1px solid ${C.line}`,display:"flex",maxWidth:480,margin:"0 auto",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>
         {TABS.map((t)=>{
           const act=page===t.id; const Icon=t.icon;
           return <button key={t.id} onClick={()=>{go(t.id);setShowMore(false);}} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:3,padding:"10px 0 8px",border:"none",background:"transparent",cursor:"pointer",fontFamily:FONT}}>

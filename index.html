@@ -2,12 +2,50 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-title" content="CRM"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
     <meta name="theme-color" content="#071625"/>
+    <link rel="manifest" href="/manifest.json"/>
+    <link rel="apple-touch-icon" href="/icon-192.png"/>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-    <title>Hospital CRM · BV Phương Đông</title>
+    <title>CRM</title>
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      /* Phủ TOÀN BỘ màn hình kể cả vùng ngoài safe area */
+      :root { background: #071625; }
+      html  { background: #071625; height: 100%; }
+      body  {
+        background: #071625;
+        margin: 0; padding: 0;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        overscroll-behavior: none;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-text-size-adjust: 100%;
+        /* Phủ ra ngoài safe area 2 bên + trên */
+        margin-left: calc(-1 * env(safe-area-inset-left, 0px));
+        margin-right: calc(-1 * env(safe-area-inset-right, 0px));
+        margin-top: calc(-1 * env(safe-area-inset-top, 0px));
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      #root {
+        background: #071625;
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+      }
+    </style>
   </head>
-  <body><div id="root"></div>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
