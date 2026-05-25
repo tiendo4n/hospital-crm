@@ -149,12 +149,61 @@ function Checkbox({checked,onChange,label}){
 }
 
 /* ===== DASHBOARD ===== */
-function Dashboard({go}){
+function useWeather(){
+  const [weather,setWeather]=useState(null);
+  useEffect(()=>{
+    if(!navigator.geolocation)return;
+    navigator.geolocation.getCurrentPosition((pos)=>{
+      const {latitude:lat,longitude:lon}=pos.coords;
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto`)
+        .then(r=>r.json())
+        .then(d=>{
+          const c=d.current; const code=c.weathercode;
+          const icon=code<=1?"☀️":code<=3?"⛅":code<=51?"🌦️":code<=67?"🌧️":code<=77?"❄️":code<=82?"🌧️":code<=99?"⛈️":"🌡️";
+          setWeather({temp:Math.round(c.temperature_2m),icon,wind:Math.round(c.windspeed_10m)});
+        }).catch(()=>{});
+    },()=>{},{timeout:8000});
+  },[]);
+  return weather;
+}
+
+function getGreeting(){
+  const h=new Date().getHours();
+  if(h<6)return"Đêm muộn rồi 🌙";
+  if(h<11)return"Chào buổi sáng ☀️";
+  if(h<13)return"Chào buổi trưa 🌤️";
+  if(h<18)return"Chào buổi chiều 👋";
+  return"Chào buổi tối 🌆";
+}
+
+function Dashboard({go,userName}){
   const {state:st}=useStore(); const L=useLuong();
   const pct=Math.min(L.pctDat,100);
   const fu=st.khach.filter((k)=>k.trangThai==="dangTuVan"||k.trangThai==="tiemNang").slice(0,4);
+  const weather=useWeather();
+  const greeting=getGreeting();
+  const displayName=userName?userName.replace(/^(Vợ - |Admin \/ )/,""):"";
   return <div>
-    <Header title="Tổng quan" sub={`${PHAN_CAP[st.caiDat.cap].ten} · Khoán ${fmtTr(st.caiDat.chiTieu)}/tháng`}/>
+    {/* Lời chào + thời tiết */}
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"18px 0 12px"}}>
+      <div>
+        <div style={{fontSize:13,color:C.dim}}>{greeting}</div>
+        <div style={{fontSize:22,fontWeight:900,color:C.text,marginTop:2,lineHeight:1.1}}>{displayName||"Xin chào!"}</div>
+        <div style={{fontSize:12,color:C.dim,marginTop:3}}>{PHAN_CAP[st.caiDat.cap].ten} · Khoán {fmtTr(st.caiDat.chiTieu)}/tháng</div>
+      </div>
+      {weather?(
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",background:C.card,border:`1.5px solid ${C.line}`,borderRadius:14,padding:"10px 14px",minWidth:72}}>
+          <span style={{fontSize:26,lineHeight:1}}>{weather.icon}</span>
+          <span style={{fontSize:20,fontWeight:800,color:C.text,marginTop:4}}>{weather.temp}°</span>
+          <span style={{fontSize:10,color:C.dim,marginTop:1}}>{weather.wind} km/h</span>
+        </div>
+      ):(
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",background:C.card,border:`1.5px solid ${C.line}`,borderRadius:14,padding:"10px 14px",minWidth:72,opacity:.4}}>
+          <span style={{fontSize:26}}>🌡️</span>
+          <span style={{fontSize:11,color:C.dim,marginTop:4}}>Đang tải</span>
+        </div>
+      )}
+    </div>
     <div style={{...box,display:"flex",alignItems:"center",gap:18}}>
       <div style={{position:"relative",width:96,height:96,flexShrink:0}}>
         <svg width="96" height="96" style={{transform:"rotate(-90deg)"}}>
@@ -759,10 +808,32 @@ function GiaDichVu(){
   }
 
   function selectSuggestion(item){
-    setNhomSel(item.nhom); setQ(""); inputRef.current?.blur();
+    // Bấm gợi ý: giữ từ khoá để hiện list lọc đầy đủ bên dưới
+    setNhomSel("Tất cả");
+    inputRef.current?.blur();
   }
 
   const showDropdown=q.length>=2&&suggestions.length>0;
+
+  // Item card dùng chung
+  function ItemCard({item}){
+    const ck=item.ma+item.ten; const isCopied=copied===ck;
+    return <div style={{background:C.card,border:`1.5px solid ${C.line}`,borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+      <div style={{flex:1,minWidth:0}}>
+        <div style={{fontSize:13.5,color:C.text,fontWeight:600,lineHeight:1.35,marginBottom:3}}>{item.ten}</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginTop:2}}>
+          {item.ma&&item.ma!=="nan"&&item.ma!=="undefined"&&<span style={{fontSize:11,color:C.dim,background:"#081a2d",padding:"1px 7px",borderRadius:7}}>{item.ma}</span>}
+          <span style={{fontSize:11,color:C.accent+"cc",background:C.accent+"11",padding:"1px 7px",borderRadius:7}}>{NHOM_ICON[item.nhom]||"📋"} {item.nhom}</span>
+        </div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5,flexShrink:0}}>
+        <div style={{fontSize:15,fontWeight:800,color:"#ffd479",whiteSpace:"nowrap"}}>{fmtGia(item.gia)}</div>
+        <button onClick={()=>copyItem(item)} style={{display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:600,color:isCopied?C.accent:C.dim,background:isCopied?C.accent+"22":"#081a2d",border:`1px solid ${isCopied?C.accent:C.line}`,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontFamily:FONT}}>
+          {isCopied?<><Check size={11}/>Đã copy</>:<><Copy size={11}/>Copy</>}
+        </button>
+      </div>
+    </div>;
+  }
 
   return <div>
     <Header title="Giá dịch vụ" sub="BV Phương Đông · T03/2026"/>
@@ -770,16 +841,21 @@ function GiaDichVu(){
     {/* Search với dropdown */}
     <div style={{position:"relative",marginBottom:12}}>
       <Search size={15} style={{position:"absolute",left:13,top:14,color:C.dim,zIndex:1}}/>
-      <input ref={inputRef} style={{...inp,paddingLeft:40,paddingRight:36}} placeholder="Tìm nhanh tên dịch vụ..." value={q} onChange={(e)=>setQ(e.target.value)}/>
+      <input ref={inputRef} style={{...inp,paddingLeft:40,paddingRight:36}}
+        placeholder="Tìm nhanh tên dịch vụ..."
+        value={q} onChange={(e)=>setQ(e.target.value)}
+        onFocus={()=>{}}
+      />
       {q&&<button onClick={()=>setQ("")} style={{position:"absolute",right:12,top:12,background:"none",border:"none",cursor:"pointer",color:C.dim}}><X size={16}/></button>}
+      {/* Dropdown gợi ý khi đang gõ */}
       {showDropdown&&(
-        <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#0a1e32",border:`1.5px solid ${C.line}`,borderRadius:12,zIndex:200,maxHeight:280,overflowY:"auto",marginTop:4,boxShadow:"0 8px 24px #00000066"}}>
+        <div style={{position:"absolute",top:"100%",left:0,right:0,background:"#0a1e32",border:`1.5px solid ${C.line}`,borderRadius:12,zIndex:200,maxHeight:260,overflowY:"auto",marginTop:4,boxShadow:"0 8px 24px #00000088"}}>
           {suggestions.map((item,i)=>(
             <div key={i} onClick={()=>selectSuggestion(item)}
-              style={{padding:"11px 14px",cursor:"pointer",borderBottom:i<suggestions.length-1?`1px solid ${C.line}`:"none",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-              <div>
-                <div style={{fontSize:13.5,color:C.text,fontWeight:500,lineHeight:1.3}}>{item.ten}</div>
-                <div style={{fontSize:11.5,color:C.dim,marginTop:2}}>{NHOM_ICON[item.nhom]||"📋"} {item.nhom}</div>
+              style={{padding:"10px 14px",cursor:"pointer",borderBottom:i<suggestions.length-1?`1px solid ${C.line}`:"none",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:13.5,color:C.text,fontWeight:500,lineHeight:1.3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:240}}>{item.ten}</div>
+                <div style={{fontSize:11,color:C.dim,marginTop:2}}>{NHOM_ICON[item.nhom]||"📋"} {item.nhom}</div>
               </div>
               <div style={{fontSize:14,color:"#ffd479",fontWeight:800,whiteSpace:"nowrap",flexShrink:0}}>{fmtGia(item.gia)}</div>
             </div>
@@ -788,50 +864,59 @@ function GiaDichVu(){
       )}
     </div>
 
-    {/* Nhóm dịch vụ - dạng chip ngang */}
+    {/* Chip nhóm cuộn ngang */}
     <div style={{display:"flex",gap:7,overflowX:"auto",paddingBottom:6,marginBottom:14,scrollbarWidth:"none"}}>
       {nhomList.map((n)=>(
         <button key={n} onClick={()=>{setNhomSel(n);setQ("");}}
-          style={{display:"flex",alignItems:"center",gap:5,fontSize:12.5,fontWeight:600,color:nhomSel===n?C.accent:C.dim,background:nhomSel===n?C.accent+"22":C.card,border:`1px solid ${nhomSel===n?C.accent:C.line}`,borderRadius:20,padding:"7px 13px",cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap",flexShrink:0}}>
+          style={{display:"flex",alignItems:"center",gap:5,fontSize:12.5,fontWeight:600,
+            color:nhomSel===n&&!q?C.accent:C.dim,
+            background:nhomSel===n&&!q?C.accent+"22":C.card,
+            border:`1px solid ${nhomSel===n&&!q?C.accent:C.line}`,
+            borderRadius:20,padding:"7px 13px",cursor:"pointer",fontFamily:FONT,whiteSpace:"nowrap",flexShrink:0}}>
           {n!=="Tất cả"&&<span>{NHOM_ICON[n]||"📋"}</span>}{n}
         </button>
       ))}
     </div>
 
     {loading&&<div style={{textAlign:"center",color:C.dim,padding:"30px 0",fontSize:13}}>Đang tải danh mục giá...</div>}
+    {!loading&&!giaData&&<div style={{textAlign:"center",color:"#e26d6d",padding:"30px 0",fontSize:13}}>Không tải được danh mục. Kiểm tra mạng và thử lại.</div>}
 
-    {/* Hiển thị theo nhóm */}
-    {!loading&&!q&&Object.entries(byNhom).map(([nhom,items])=>(
+    {/* KẾT QUẢ TÌM KIẾM — hiện khi đang gõ */}
+    {!loading&&q.trim().length>=2&&(
+      <div>
+        <div style={{fontSize:13,color:C.sub,marginBottom:10}}>{suggestions.length} kết quả cho "{q}"</div>
+        {suggestions.length===0&&<div style={{textAlign:"center",color:C.dim,padding:"20px 0",fontSize:13}}>Không tìm thấy dịch vụ phù hợp.</div>}
+        <div style={{display:"flex",flexDirection:"column",gap:7}}>
+          {suggestions.map((item,i)=><ItemCard key={i} item={item}/>)}
+        </div>
+      </div>
+    )}
+
+    {/* DUYỆT THEO NHÓM — hiện khi không tìm kiếm */}
+    {!loading&&giaData&&!q&&Object.entries(byNhom).map(([nhom,items])=>(
       <div key={nhom} style={{marginBottom:20}}>
         <div style={{fontSize:14,fontWeight:800,color:C.text,marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
-          <span>{NHOM_ICON[nhom]||"📋"}</span>{nhom}
+          <span style={{fontSize:18}}>{NHOM_ICON[nhom]||"📋"}</span>
+          <span>{nhom}</span>
           <span style={{fontSize:12,color:C.dim,fontWeight:400}}>({items.length} dịch vụ)</span>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:7}}>
-          {items.slice(0,nhomSel!=="Tất cả"?items.length:8).map((item,i)=>{
-            const key=item.ma+item.ten; const isCopied=copied===key;
-            return <div key={i} style={{background:C.card,border:`1.5px solid ${C.line}`,borderRadius:12,padding:"11px 13px",display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13.5,color:C.text,fontWeight:600,lineHeight:1.35,marginBottom:3}}>{item.ten}</div>
-                {item.ma&&item.ma!=="nan"&&<span style={{fontSize:11,color:C.dim,background:"#081a2d",padding:"1px 7px",borderRadius:7}}>{item.ma}</span>}
-              </div>
-              <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5,flexShrink:0}}>
-                <div style={{fontSize:15,fontWeight:800,color:"#ffd479",whiteSpace:"nowrap"}}>{fmtGia(item.gia)}</div>
-                <button onClick={()=>copyItem(item)} style={{display:"flex",alignItems:"center",gap:4,fontSize:11,fontWeight:600,color:isCopied?C.accent:C.dim,background:isCopied?C.accent+"22":"#081a2d",border:`1px solid ${isCopied?C.accent:C.line}`,borderRadius:7,padding:"4px 9px",cursor:"pointer",fontFamily:FONT}}>
-                  {isCopied?<><Check size={11}/>Đã copy</>:<><Copy size={11}/>Copy</>}
-                </button>
-              </div>
-            </div>;
-          })}
-          {nhomSel==="Tất cả"&&items.length>8&&(
-            <button onClick={()=>setNhomSel(nhom)} style={{width:"100%",padding:"10px 0",borderRadius:11,border:`1.5px dashed ${C.line}`,background:"transparent",color:C.sub,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:FONT}}>
-              Xem tất cả {items.length} dịch vụ {nhom} →
+          {items.slice(0,nhomSel!=="Tất cả"?items.length:6).map((item,i)=>(
+            <ItemCard key={item.ma+item.ten+i} item={{...item,nhom}}/>
+          ))}
+          {nhomSel==="Tất cả"&&items.length>6&&(
+            <button onClick={()=>setNhomSel(nhom)}
+              style={{width:"100%",padding:"10px 0",borderRadius:11,border:`1.5px dashed ${C.line}`,background:"transparent",color:C.accent,fontWeight:600,fontSize:13,cursor:"pointer",fontFamily:FONT}}>
+              Xem tất cả {items.length} dịch vụ →
             </button>
           )}
         </div>
       </div>
     ))}
-    <div style={{textAlign:"center",fontSize:11.5,color:C.dim,padding:"10px 0 4px",lineHeight:1.6}}>Giá viện phí T03/2026 · Liên hệ CBKD để biết giá BHYT</div>
+
+    {!loading&&giaData&&<div style={{textAlign:"center",fontSize:11.5,color:C.dim,padding:"16px 0 4px",lineHeight:1.6}}>
+      Giá viện phí T03/2026 · Liên hệ CBKD để biết giá BHYT
+    </div>}
   </div>;
 }
 
@@ -848,6 +933,7 @@ const MORE_TABS=[
 
 /* ===== MÀN HÌNH NHẬP KEY ===== */
 const KEY_LS = "hosp_crm_key";
+const NAME_LS = "hosp_crm_name";
 const KEYS_URL = "https://raw.githubusercontent.com/tiendo4n/hospital-crm/main/public/keys.json";
 
 function LockScreen({ onUnlock }) {
@@ -864,6 +950,7 @@ function LockScreen({ onUnlock }) {
       const found = data.keys.find((k) => k.key === key.trim() && k.active);
       if (found) {
         localStorage.setItem(KEY_LS, key.trim());
+        localStorage.setItem(NAME_LS, found.ten);
         onUnlock(found.ten);
       } else {
         setErr("Key không hợp lệ hoặc đã bị khoá.");
@@ -903,6 +990,7 @@ export default function App(){
     const saved = localStorage.getItem(KEY_LS);
     return saved ? saved : null;
   });
+  const userName = localStorage.getItem(NAME_LS) || "";
   const [verifying, setVerifying] = useState(!!localStorage.getItem(KEY_LS));
 
   useEffect(() => {
@@ -925,10 +1013,10 @@ export default function App(){
     </div>
   );
   if (!unlocked) return <LockScreen onUnlock={(ten) => setUnlocked(ten)} />;
-  return <StoreProvider><InnerApp /></StoreProvider>;
+  return <StoreProvider><InnerApp userName={userName}/></StoreProvider>;
 }
 
-function InnerApp(){
+function InnerApp({userName=""}){
   const [page,setPage]=useState("dashboard");
   const [selectedId,setSelectedId]=useState(null);
   const [showMore,setShowMore]=useState(false);
@@ -936,7 +1024,7 @@ function InnerApp(){
   function go(p,id=null){ setPage(p); setSelectedId(id); setShowMore(false); }
 
   function renderPage(){
-    if(page==="dashboard") return <Dashboard go={go}/>;
+    if(page==="dashboard") return <Dashboard go={go} userName={userName}/>;
     if(page==="danh_sach") return <DanhSachKhach go={go}/>;
     if(page==="them_khach") return <KhachForm goiKham={st.goiKham} onBack={()=>go("danh_sach")} onSave={(k)=>{addKhach(k);go("danh_sach");}}/>;
     if(page==="chitiet") return <ChiTietKhach id={selectedId} go={go}/>;
