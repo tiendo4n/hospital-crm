@@ -947,7 +947,7 @@ function LockScreen({ onUnlock }) {
     try {
       const res = await fetch(KEYS_URL + "?t=" + Date.now());
       const data = await res.json();
-      const found = data.keys.find((k) => k.key === key.trim() && k.active);
+      const found = data.keys.find((k) => k.key.toLowerCase() === key.trim().toLowerCase() && k.active);
       if (found) {
         localStorage.setItem(KEY_LS, key.trim());
         localStorage.setItem(NAME_LS, found.ten);
@@ -1000,7 +1000,7 @@ export default function App(){
     fetch(KEYS_URL + "?t=" + Date.now())
       .then((r) => r.json())
       .then((data) => {
-        const found = data.keys.find((k) => k.key === saved && k.active);
+        const found = data.keys.find((k) => k.key.toLowerCase() === saved.toLowerCase() && k.active);
         if (!found) { localStorage.removeItem(KEY_LS); setUnlocked(null); }
         setVerifying(false);
       })
