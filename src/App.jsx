@@ -877,27 +877,21 @@ function LockScreen({ onUnlock }) {
   return (
     <div style={{ minHeight:"100vh", background:C.bg, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", fontFamily:FONT, padding:"0 24px" }}>
       <div style={{ width:"100%", maxWidth:400 }}>
-        <div style={{ textAlign:"center", marginBottom:32 }}>
-          <div style={{ fontSize:48, marginBottom:12 }}>🏥</div>
-          <div style={{ fontSize:22, fontWeight:900, color:C.text }}>Hospital CRM</div>
-          <div style={{ fontSize:13.5, color:C.dim, marginTop:6 }}>BV Đa khoa Phương Đông</div>
-        </div>
         <div style={{ background:C.card, border:`1.5px solid ${C.line}`, borderRadius:18, padding:24 }}>
-          <div style={{ fontSize:14, color:C.sub, fontWeight:600, marginBottom:10 }}>Nhập key truy cập</div>
           <input
             value={key} onChange={(e) => setKey(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && check()}
-            placeholder="VD: PD-2026-VO"
-            style={{ ...inp, fontSize:17, letterSpacing:2, textAlign:"center", marginBottom:12 }}
+            placeholder=""
+            style={{ ...inp, fontSize:18, letterSpacing:3, textAlign:"center", marginBottom:12 }}
             autoCapitalize="characters"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
           />
           {err && <div style={{ fontSize:13, color:"#e26d6d", marginBottom:10, textAlign:"center" }}>{err}</div>}
           <button onClick={check} disabled={loading} style={{ width:"100%", padding:"14px 0", borderRadius:13, border:"none", background: loading ? C.line : "linear-gradient(135deg,#1ec8a5,#15a888)", color:"#06231c", fontWeight:800, fontSize:15, cursor: loading ? "default":"pointer", fontFamily:FONT }}>
-            {loading ? "Đang kiểm tra..." : "Vào app →"}
+            {loading ? "..." : "→"}
           </button>
-        </div>
-        <div style={{ textAlign:"center", fontSize:12, color:C.dim, marginTop:20, lineHeight:1.6 }}>
-          Liên hệ quản trị viên để nhận key.<br/>Key có thể bị khoá bất cứ lúc nào.
         </div>
       </div>
     </div>
