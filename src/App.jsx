@@ -10,7 +10,7 @@ import {
 
 const FONT = `'Be Vietnam Pro','Segoe UI',system-ui,sans-serif`;
 const T = 1e6;
-const C = { bg:"#04111e",card:"#071e35",line:"#0d3058",inputBg:"#030e1a",accent:"#0ea85a",text:"#eaf4ff",sub:"#8fb0cc",dim:"#5e84a3" };
+const C = { bg:"#04111e", card:"#071e35", line:"#0d3058", inputBg:"#030e1a", accent:"#1f995a", text:"#eaf4ff", sub:"#8fb0cc", dim:"#5e84a3" };
 const inp = { boxSizing:"border-box",width:"100%",padding:"12px 13px",borderRadius:11,border:`1.5px solid ${C.line}`,background:C.inputBg,color:C.text,fontSize:15,fontFamily:FONT,outline:"none" };
 const box = { background:C.card,border:`1.5px solid ${C.line}`,borderRadius:14,padding:16,marginBottom:14 };
 
@@ -27,7 +27,7 @@ const LOAI_DV = {
 const THUONG_NAM=[{tu:0,pct:0},{tu:100,pct:0.2},{tu:150,pct:0.35},{tu:200,pct:0.45},{tu:250,pct:0.5}];
 const TRANG_THAI = {
   tiemNang:{ten:"Tiềm năng",mau:"#7da2c0"}, dangTuVan:{ten:"Đang tư vấn",mau:"#f0b429"},
-  daChot:{ten:"Đã chốt",mau:"#0ea85a"}, daKham:{ten:"Đã khám",mau:"#4ea8de"},
+  daChot:{ten:"Đã chốt",mau:"#1f995a"}, daKham:{ten:"Đã khám",mau:"#4ea8de"},
 };
 const BAC_LE = [{tu:0,den:10,pct:0},{tu:10,den:200,pct:1.5},{tu:200,den:500,pct:2.5},{tu:500,den:700,pct:3.5},{tu:700,den:Infinity,pct:5}];
 const THUONG_TH = [{tu:0,pct:0},{tu:100,pct:0.5},{tu:150,pct:0.7},{tu:200,pct:1},{tu:250,pct:1.2}];
@@ -129,7 +129,7 @@ function Field({label,children,hint}){
   </label>;
 }
 function Btn({children,onClick,primary,danger,small,style={}}){
-  return <button onClick={onClick} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,cursor:"pointer",fontFamily:FONT,fontWeight:700,border:"none",borderRadius:small?10:13,padding:small?"9px 14px":"14px 0",fontSize:small?13:15,background:primary?"linear-gradient(135deg,#0ea85a,#0a8f4a)":danger?"#2a0e0e":C.card,color:primary?"#021a0a":danger?"#e26d6d":C.sub,width:small?"auto":"100%",boxShadow:primary?"0 8px 22px #0ea85a33":"none",...style}}>{children}</button>;
+  return <button onClick={onClick} style={{display:"flex",alignItems:"center",justifyContent:"center",gap:7,cursor:"pointer",fontFamily:FONT,fontWeight:700,border:"none",borderRadius:small?10:13,padding:small?"9px 14px":"14px 0",fontSize:small?13:15,background:primary?"linear-gradient(135deg,#1f995a,#157a46)":danger?"#2a0e0e":C.card,color:primary?"#011508":danger?"#e26d6d":C.sub,width:small?"auto":"100%",boxShadow:primary?"0 8px 22px #1f995a33":"none",...style}}>{children}</button>;
 }
 function Header({title,sub,onBack}){
   return <div style={{display:"flex",alignItems:"center",gap:12,padding:"18px 0 14px"}}>
@@ -142,8 +142,8 @@ function Header({title,sub,onBack}){
 }
 function Badge({children,mau}){ return <span style={{fontSize:11,fontWeight:700,color:mau,background:mau+"22",padding:"3px 9px",borderRadius:20}}>{children}</span>; }
 function Checkbox({checked,onChange,label}){
-  return <button onClick={()=>onChange(!checked)} style={{display:"flex",alignItems:"center",gap:9,background:checked?"#0e3a52":"#030e1a",border:checked?"1.5px solid #0ea85a":`1.5px solid ${C.line}`,borderRadius:10,padding:"10px 13px",cursor:"pointer",fontFamily:FONT,width:"100%",marginBottom:8}}>
-    <div style={{width:18,height:18,borderRadius:5,background:checked?C.accent:"transparent",border:checked?"none":`2px solid ${C.dim}`,display:"flex",alignItems:"center",justifyContent:"center"}}>{checked&&<Check size={12} color="#021a0a"/>}</div>
+  return <button onClick={()=>onChange(!checked)} style={{display:"flex",alignItems:"center",gap:9,background:checked?"#0e3a52":"#030e1a",border:checked?"1.5px solid #1f995a":`1.5px solid ${C.line}`,borderRadius:10,padding:"10px 13px",cursor:"pointer",fontFamily:FONT,width:"100%",marginBottom:8}}>
+    <div style={{width:18,height:18,borderRadius:5,background:checked?C.accent:"transparent",border:checked?"none":`2px solid ${C.dim}`,display:"flex",alignItems:"center",justifyContent:"center"}}>{checked&&<Check size={12} color="#011508"/>}</div>
     <span style={{fontSize:13,color:C.sub}}>{label}</span>
   </button>;
 }
@@ -228,14 +228,14 @@ function Dashboard({go,userName}){
         <div style={{fontSize:11.5,color:C.dim,marginTop:2}}>khoán DTT: {fmtTr(L.dttKhoan)} (80% chỉ tiêu)</div>
       </div>
     </div>
-    <div style={{background:"linear-gradient(135deg,#0ea85a,#0a8f4a)",borderRadius:16,padding:"18px 16px",marginBottom:14,boxShadow:"0 10px 26px #0ea85a33"}}>
-      <div style={{fontSize:12,color:"#021a0a",fontWeight:700,opacity:.8}}>THU NHẬP DỰ KIẾN THÁNG</div>
-      <div style={{fontSize:30,fontWeight:900,color:"#011208",marginTop:3}}>{fmt(L.tong)}</div>
+    <div style={{background:"linear-gradient(135deg,#1f995a,#157a46)",borderRadius:16,padding:"18px 16px",marginBottom:14,boxShadow:"0 10px 26px #1f995a33"}}>
+      <div style={{fontSize:12,color:"#011508",fontWeight:700,opacity:.8}}>THU NHẬP DỰ KIẾN THÁNG</div>
+      <div style={{fontSize:30,fontWeight:900,color:"#010f06",marginTop:3}}>{fmt(L.tong)}</div>
       <div style={{display:"flex",gap:12,marginTop:12}}>
         {[["Lương cứng",L.luongCung],["Hoa hồng",L.tongHH],["Thưởng",L.thuong]].map(([t,v])=>(
           <div key={t} style={{flex:1}}>
-            <div style={{fontSize:10,color:"#021a0a",opacity:.75,fontWeight:600}}>{t}</div>
-            <div style={{fontSize:12.5,color:"#011208",fontWeight:800,marginTop:2}}>{fmt(v)}</div>
+            <div style={{fontSize:10,color:"#011508",opacity:.75,fontWeight:600}}>{t}</div>
+            <div style={{fontSize:12.5,color:"#010f06",fontWeight:800,marginTop:2}}>{fmt(v)}</div>
           </div>
         ))}
       </div>
@@ -438,7 +438,7 @@ function ChiTietKhach({id,go}){
           <option value="goi">Gọi ĐT</option><option value="zalo">Zalo</option><option value="gap">Gặp trực tiếp</option><option value="note">Ghi chú</option>
         </select>
         <input style={{...inp,flex:2,fontSize:13,padding:"10px 12px"}} value={noiDungLH} onChange={(e)=>setNoiDungLH(e.target.value)} placeholder="Nội dung liên hệ..."/>
-        <button onClick={()=>{if(!noiDungLH.trim())return;addLienHe({khachId:id,ngay:new Date().toISOString().slice(0,10),loai:loaiLH,noiDung:noiDungLH});setNoiDungLH("");}} style={{background:C.accent,border:"none",borderRadius:10,padding:"0 14px",cursor:"pointer",color:"#021a0a"}}><Send size={17}/></button>
+        <button onClick={()=>{if(!noiDungLH.trim())return;addLienHe({khachId:id,ngay:new Date().toISOString().slice(0,10),loai:loaiLH,noiDung:noiDungLH});setNoiDungLH("");}} style={{background:C.accent,border:"none",borderRadius:10,padding:"0 14px",cursor:"pointer",color:"#011508"}}><Send size={17}/></button>
       </div>
       {lh.length===0&&<div style={{fontSize:13,color:C.dim}}>Chưa có liên hệ nào.</div>}
       {lh.map((l)=>(
@@ -535,14 +535,14 @@ function MapBV(){
     <Header title="Map Bệnh viện" sub="BV Đa khoa Phương Đông"/>
     <div style={{display:"flex",gap:8,marginBottom:14}}>
       {["A","B"].map((t)=>(
-        <button key={t} onClick={()=>setToa(t)} style={{flex:1,padding:"13px 0",borderRadius:12,border:"none",fontFamily:FONT,fontSize:15,fontWeight:700,cursor:"pointer",background:toa===t?"linear-gradient(135deg,#0ea85a,#0a8f4a)":C.card,color:toa===t?"#021a0a":C.sub}}>
+        <button key={t} onClick={()=>setToa(t)} style={{flex:1,padding:"13px 0",borderRadius:12,border:"none",fontFamily:FONT,fontSize:15,fontWeight:700,cursor:"pointer",background:toa===t?"linear-gradient(135deg,#1f995a,#157a46)":C.card,color:toa===t?"#011508":C.sub}}>
           Tòa {t} · {t==="A"?"Nội khoa":"Ngoại khoa"}
         </button>
       ))}
     </div>
     <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}}>
       {Array.from({length:30},(_,i)=>i+1).map((t)=>(
-        <button key={t} onClick={()=>setTang(t)} style={{width:52,height:40,borderRadius:10,border:"none",fontFamily:FONT,fontSize:13,fontWeight:700,cursor:"pointer",background:tang===t?C.accent:C.card,color:tang===t?"#021a0a":floors[toa][t]?C.sub:C.dim}}>
+        <button key={t} onClick={()=>setTang(t)} style={{width:52,height:40,borderRadius:10,border:"none",fontFamily:FONT,fontSize:13,fontWeight:700,cursor:"pointer",background:tang===t?C.accent:C.card,color:tang===t?"#011508":floors[toa][t]?C.sub:C.dim}}>
           {t}F
         </button>
       ))}
@@ -597,7 +597,7 @@ function BaoCao(){
     <Header title="Báo cáo" sub="CBKD · BV Phương Đông"/>
     <div style={{display:"flex",gap:8,marginBottom:14}}>
       {[["thang","Tháng này"],["nam","Dự kiến năm"]].map(([k,l])=>(
-        <button key={k} onClick={()=>setKy(k)} style={{flex:1,padding:"10px 0",borderRadius:11,border:"none",fontFamily:FONT,fontSize:13.5,fontWeight:700,cursor:"pointer",background:ky===k?"linear-gradient(135deg,#0ea85a,#0a8f4a)":C.card,color:ky===k?"#021a0a":C.sub}}>{l}</button>
+        <button key={k} onClick={()=>setKy(k)} style={{flex:1,padding:"10px 0",borderRadius:11,border:"none",fontFamily:FONT,fontSize:13.5,fontWeight:700,cursor:"pointer",background:ky===k?"linear-gradient(135deg,#1f995a,#157a46)":C.card,color:ky===k?"#011508":C.sub}}>{l}</button>
       ))}
     </div>
     <div style={box}>
@@ -642,7 +642,7 @@ function BaoCao(){
         </div>;
       })}
     </div>
-    <button onClick={xuatBaoCao} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"14px 0",borderRadius:13,border:"none",background:"linear-gradient(135deg,#0ea85a,#0a8f4a)",color:"#021a0a",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:FONT,boxShadow:"0 8px 22px #0ea85a33"}}>
+    <button onClick={xuatBaoCao} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"14px 0",borderRadius:13,border:"none",background:"linear-gradient(135deg,#1f995a,#157a46)",color:"#011508",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:FONT,boxShadow:"0 8px 22px #1f995a33"}}>
       <Download size={18}/> Xuất báo cáo (.txt)
     </button>
     {exportMsg&&<div style={{textAlign:"center",color:C.accent,fontSize:13,marginTop:8}}>{exportMsg}</div>}
@@ -750,7 +750,7 @@ function BackupData(){
     <div style={{...box,border:`1.5px solid ${C.accent}33`}}>
       <div style={{fontSize:13.5,fontWeight:800,color:C.text,marginBottom:6}}>Xuất backup</div>
       <div style={{fontSize:12.5,color:C.dim,marginBottom:12,lineHeight:1.5}}>Tải toàn bộ dữ liệu về máy dạng file JSON. Lưu ở nơi an toàn để dùng khi đổi điện thoại.</div>
-      <button onClick={exportData} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#0ea85a,#0a8f4a)",color:"#021a0a",fontWeight:800,fontSize:14.5,cursor:"pointer",fontFamily:FONT}}>
+      <button onClick={exportData} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:"13px 0",borderRadius:12,border:"none",background:"linear-gradient(135deg,#1f995a,#157a46)",color:"#011508",fontWeight:800,fontSize:14.5,cursor:"pointer",fontFamily:FONT}}>
         <Download size={17}/> Xuất file backup
       </button>
     </div>
@@ -991,7 +991,7 @@ function LockScreen({ onUnlock }) {
             spellCheck="false"
           />
           {err && <div style={{ fontSize:13, color:"#e26d6d", marginBottom:10, textAlign:"center" }}>{err}</div>}
-          <button onClick={check} disabled={loading} style={{ width:"100%", padding:"14px 0", borderRadius:13, border:"none", background: loading ? C.line : "linear-gradient(135deg,#0ea85a,#0a8f4a)", color:"#021a0a", fontWeight:800, fontSize:15, cursor: loading ? "default":"pointer", fontFamily:FONT }}>
+          <button onClick={check} disabled={loading} style={{ width:"100%", padding:"14px 0", borderRadius:13, border:"none", background: loading ? C.line : "linear-gradient(135deg,#1f995a,#157a46)", color:"#011508", fontWeight:800, fontSize:15, cursor: loading ? "default":"pointer", fontFamily:FONT }}>
             {loading ? "..." : "→"}
           </button>
         </div>
